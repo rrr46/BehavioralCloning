@@ -4,9 +4,10 @@ import csv
 import sklearn
 from sklearn.utils import shuffle
 import scipy
+import matplotlib as plt
 
 samples = []
-with open('C:/Users/rranade/Documents/GitHub/CarND-Behavioral-Cloning-P3/windows_sim/windows_sim/windows_sim_Data/IMG/August10th/driving_log.csv') as csvfile:
+with open('C:/Users/rranade/Documents/GitHub/CarND-Behavioral-Cloning-P3/windows_sim/windows_sim/windows_sim_Data/IMG/August11th/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
         samples.append(line)
@@ -112,7 +113,7 @@ def resize_image(image):
 #print (np.size(train_samples))
 from keras.models import Sequential, load_model
 from keras.layers import Flatten, Dense, Lambda, Cropping2D, Dropout, Reshape
-from keras.layers.convolutional import Convolution2D
+from keras.layers.convolutional import Convolution2D, Conv2D
 from keras.layers.pooling import MaxPooling2D
 
 
@@ -125,25 +126,77 @@ model.add(Lambda(resize_image, name = 'ResizeImage'))
 # model.add(Lambda(lambda x : tf.image.resize_images(x,(64,64))))
 #model.add(Reshape((64,64,3), input_shape = (90,320,3)))
 #model.add(Lambda(lambda x : (x/255.0), input_shape = (90,320,3)))
+##model.add(Convolution2D(3,3,3,activation = 'relu')) #TODO
 #Input = 160x320x3. Output = 166x316x6
-model.add(Convolution2D(32,5,5,activation = 'relu')) #TODO
+##model.add(Convolution2D(32,5,5,activation = 'relu')) #TODO
 #Input = 86x316x16. Output = 83x158x6
-model.add(MaxPooling2D(pool_size = (2,2))) #TODO
+#model.add(MaxPooling2D(pool_size = (2,2))) #TODO
+##model.add(Convolution2D(32,2,2,activation = 'relu')) #TODO
 #Input = 83x158x6. Output = 79x154x16 
-model.add(Convolution2D(64,5,5,activation = 'relu'))
+##model.add(Convolution2D(64,5,5,activation = 'relu'))
 #Input= 79x154x16. Output = 38x77x16
-model.add(MaxPooling2D(pool_size = (2,2)))
+##model.add(MaxPooling2D(pool_size = (2,2)))
 #Input = 38x77x16.
-model.add(Convolution2D(128,5,5,activation = 'relu'))
+##model.add(Convolution2D(128,5,5,activation = 'relu'))
+##model.add(Convolution2D(256,5,5,activation = 'relu'))
+#model.add(Dropout(0.5))
+##model.add(Flatten())
+##model.add(Dense(1024, activation = 'relu'))
+#model.add(Dropout(0.5))
+##model.add(Dense(512, activation = 'relu'))
+##model.add(Dropout(0.5))
+##model.add(Dense(64, activation = 'relu'))
+##model.add(Dense(1))
+##Model 2
+# model.add(Conv2D(3,kernel_size = (5,5),activation = 'relu',use_bias=True, input_shape = (32,32,3)))
+# model.add(MaxPooling2D(pool_size = (2,2)))
+# model.add(Conv2D(24,kernel_size = (5,5),activation = 'relu',use_bias=True))
+# model.add(MaxPooling2D(pool_size = (2,2)))
+# model.add(Conv2D(96,kernel_size = (5,5),activation = 'relu',use_bias=True))
+# model.add(Flatten())
+# model.add(Dense(1024,activation = 'relu',use_bias = True))
 # model.add(Dropout(0.5))
-model.add(Flatten())
-model.add(Dense(1024, activation = 'relu'))
+# model.add(Dense(256,activation = 'relu',use_bias = True))
+# model.add(Dense(32,activation = 'relu',use_bias = True))
+# model.add(Dropout(0.5))
+# model.add(Dense(1))
+
+#Model 3
+model.add(Conv2D(3,kernel_size = (1,1),activation = 'relu',use_bias=False, input_shape = (64,64,3)))
+model.add(Conv2D(32,kernel_size = (3,3),activation = 'relu',use_bias=False))
+model.add(MaxPooling2D(pool_size = (2,2)))
 model.add(Dropout(0.5))
-model.add(Dense(512, activation = 'relu'))
-# model.add(Dropout(0.5))
-model.add(Dense(64, activation = 'relu'))
+model.add(Conv2D(64,kernel_size = (3,3),activation = 'relu',use_bias=False))
+model.add(Conv2D(64,kernel_size = (3,3),activation = 'relu',use_bias=False))
+model.add(MaxPooling2D(pool_size = (2,2)))
+model.add(Dropout(0.5))
+model.add(Conv2D(128,kernel_size = (3,3),activation = 'relu',use_bias=False))
+model.add(Conv2D(128,kernel_size = (3,3),activation = 'relu',use_bias=False))
+model.add(MaxPooling2D(pool_size = (2,2)))
+model.add(Dropout(0.5))
+model.add(Flatten())
+model.add(Dense(512,activation = 'relu',use_bias = False))
+model.add(Dense(64,activation = 'relu',use_bias = False))
+model.add(Dense(16,activation = 'relu',use_bias = False))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
-model.fit_generator(train_generator, samples_per_epoch=len(train_samples), validation_data=validation_generator, nb_val_samples=len(validation_samples), nb_epoch=1)
-model.save('model_test2.h5')
+history = model.fit_generator(train_generator, samples_per_epoch=len(train_samples)/4, validation_data=validation_generator, nb_val_samples=len(validation_samples)/4, nb_epoch=2)
+model.save('model_test3.h5')
+plt.figure()
+plt.plot(history.history['acc'])
+plt.plot(history.history['val_acc'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epochs')
+plt.legend(['train','test'])
+
+plt.figure()
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epochs')
+plt.legend(['train','test'])
+
+plt.show()
